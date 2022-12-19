@@ -2,22 +2,17 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/Counter.sol";
+import "../src/Chai4626.sol";
+import "./DummyERC20.sol";
 
-contract CounterTest is Test {
+contract Chai4626Test is Test {
     Counter public counter;
+
     function setUp() public {
-       counter = new Counter();
-       counter.setNumber(0);
+        address public chai = deployCode("./abi/Chai.abi.json");
+        tokenDAI = new DummyERC20("DAI", "DAI", 18, 1000);
+        chai4626 = new Chai(chai, address(tokenDAI));
     }
 
-    function testIncrement() public {
-        counter.increment();
-        assertEq(counter.number(), 1);
-    }
-
-    function testSetNumber(uint256 x) public {
-        counter.setNumber(x);
-        assertEq(counter.number(), x);
-    }
+    
 }
