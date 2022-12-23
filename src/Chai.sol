@@ -16,11 +16,11 @@
 
 pragma solidity ^0.8.13;
 
-contract VatLike {
+interface VatLike {
     function hope(address) external;
 }
 
-contract PotLike {
+interface PotLike {
     function chi() external returns (uint256);
 
     function rho() external returns (uint256);
@@ -32,16 +32,20 @@ contract PotLike {
     function exit(uint256) external;
 }
 
-contract JoinLike {
-    function join(address, uint) external;
+interface JoinLike {
+    function join(address, uint256) external;
 
-    function exit(address, uint) external;
+    function exit(address, uint256) external;
 }
 
-contract GemLike {
-    function transferFrom(address, address, uint) external returns (bool);
+interface GemLike {
+    function transferFrom(
+        address,
+        address,
+        uint256
+    ) external returns (bool);
 
-    function approve(address, uint) external returns (bool);
+    function approve(address, uint256) external returns (bool);
 }
 
 contract Chai {
@@ -60,39 +64,39 @@ contract Chai {
     uint8 public constant decimals = 18;
     uint256 public totalSupply;
 
-    mapping(address => uint) public balanceOf;
-    mapping(address => mapping(address => uint)) public allowance;
-    mapping(address => uint) public nonces;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+    mapping(address => uint256) public nonces;
 
-    event Approval(address indexed src, address indexed guy, uint wad);
-    event Transfer(address indexed src, address indexed dst, uint wad);
+    event Approval(address indexed src, address indexed guy, uint256 wad);
+    event Transfer(address indexed src, address indexed dst, uint256 wad);
 
     // --- Math ---
-    uint constant RAY = 10 ** 27;
+    uint256 constant RAY = 10**27;
 
-    function add(uint x, uint y) internal pure returns (uint z) {
+    function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x + y) >= x);
     }
 
-    function sub(uint x, uint y) internal pure returns (uint z) {
+    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x - y) <= x);
     }
 
-    function mul(uint x, uint y) internal pure returns (uint z) {
+    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x);
     }
 
-    function rmul(uint x, uint y) internal pure returns (uint z) {
+    function rmul(uint256 x, uint256 y) internal pure returns (uint256 z) {
         // always rounds down
         z = mul(x, y) / RAY;
     }
 
-    function rdiv(uint x, uint y) internal pure returns (uint z) {
+    function rdiv(uint256 x, uint256 y) internal pure returns (uint256 z) {
         // always rounds down
         z = mul(x, RAY) / y;
     }
 
-    function rdivup(uint x, uint y) internal pure returns (uint z) {
+    function rdivup(uint256 x, uint256 y) internal pure returns (uint256 z) {
         // always rounds up
         z = add(mul(x, RAY), sub(y, 1)) / y;
     }
@@ -123,17 +127,21 @@ contract Chai {
         vat.hope(address(daiJoin));
         vat.hope(address(pot));
 
-        daiToken.approve(address(daiJoin), uint(-1));
+        daiToken.approve(address(daiJoin), type(uint256).max);
     }
 
     // --- Token ---
-    function transfer(address dst, uint wad) external returns (bool) {
+    function transfer(address dst, uint256 wad) external returns (bool) {
         return transferFrom(msg.sender, dst, wad);
     }
 
     // like transferFrom but dai-denominated
-    function move(address src, address dst, uint wad) external returns (bool) {
-        uint chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
+    function move(
+        address src,
+        address dst,
+        uint256 wad
+    ) external returns (bool) {
+        uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
         // rounding up ensures dst gets at least wad dai
         return transferFrom(src, dst, rdivup(wad, chi));
     }
@@ -141,10 +149,12 @@ contract Chai {
     function transferFrom(
         address src,
         address dst,
-        uint wad
+        uint256 wad
     ) public returns (bool) {
         require(balanceOf[src] >= wad, "chai/insufficient-balance");
-        if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
+        if (
+            src != msg.sender && allowance[src][msg.sender] != type(uint256).max
+        ) {
             require(
                 allowance[src][msg.sender] >= wad,
                 "chai/insufficient-allowance"
@@ -157,7 +167,7 @@ contract Chai {
         return true;
     }
 
-    function approve(address usr, uint wad) external returns (bool) {
+    function approve(address usr, uint256 wad) external returns (bool) {
         allowance[msg.sender][usr] = wad;
         emit Approval(msg.sender, usr, wad);
         return true;
@@ -198,20 +208,20 @@ contract Chai {
         );
         require(nonce == nonces[holder]++, "chai/invalid-nonce");
 
-        uint can = allowed ? uint(-1) : 0;
+        uint256 can = allowed ? type(uint256).max : 0;
         allowance[holder][spender] = can;
         emit Approval(holder, spender, can);
     }
 
-    function dai(address usr) external returns (uint wad) {
-        uint chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
+    function dai(address usr) external returns (uint256 wad) {
+        uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
         wad = rmul(chi, balanceOf[usr]);
     }
 
     // wad is denominated in dai
-    function join(address dst, uint wad) external {
-        uint chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
-        uint pie = rdiv(wad, chi);
+    function join(address dst, uint256 wad) external {
+        uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
+        uint256 pie = rdiv(wad, chi);
         balanceOf[dst] = add(balanceOf[dst], pie);
         totalSupply = add(totalSupply, pie);
 
@@ -222,9 +232,11 @@ contract Chai {
     }
 
     // wad is denominated in (1/chi) * dai
-    function exit(address src, uint wad) public {
+    function exit(address src, uint256 wad) public {
         require(balanceOf[src] >= wad, "chai/insufficient-balance");
-        if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
+        if (
+            src != msg.sender && allowance[src][msg.sender] != type(uint256).max
+        ) {
             require(
                 allowance[src][msg.sender] >= wad,
                 "chai/insufficient-allowance"
@@ -234,15 +246,15 @@ contract Chai {
         balanceOf[src] = sub(balanceOf[src], wad);
         totalSupply = sub(totalSupply, wad);
 
-        uint chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
+        uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
         pot.exit(wad);
         daiJoin.exit(msg.sender, rmul(chi, wad));
         emit Transfer(src, address(0), wad);
     }
 
     // wad is denominated in dai
-    function draw(address src, uint wad) external {
-        uint chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
+    function draw(address src, uint256 wad) external {
+        uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
         // rounding up ensures usr gets at least wad dai
         exit(src, rdivup(wad, chi));
     }

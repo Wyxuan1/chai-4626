@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 //import erc4626
-import {ERC20} from "https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC20.sol";
-import {ERC4626} from "https://github.com/transmissions11/solmate/blob/main/src/mixins/ERC4626.sol";
+import {ERC20} from "solmate/src/tokens/ERC20.sol";
+import {ERC4626} from "solmate/src/mixins/ERC4626.sol";
 import {Chai} from "./Chai.sol";
 
 interface PotLike {
-    function chi() external returns (uint256);
+    function chi() external view returns (uint256);
 }
 
 contract Chai4626 is ERC4626 {
@@ -17,19 +17,18 @@ contract Chai4626 is ERC4626 {
     uint256 public ibalance;
 
     // Chai(0x06AF07097C9Eeb7fD685c692751D5C66dB49c215);
-    constructor(
-        address _dai,
-        address _chai
-    ) ERC4626(ERC20(_dai), "wCHAI", "Wrapped 4626 Chai") {
+    constructor(address _dai, address _chai)
+        ERC4626(ERC20(_dai), "wCHAI", "Wrapped 4626 Chai")
+    {
         daiToken = ERC20(_dai);
-        daiToken.approve(_chai, 2 ** 256 - 1);
+        daiToken.approve(_chai, 2**256 - 1);
         chaiContract = Chai(_chai);
     }
 
     function _mint(address receiver, uint256 amount) internal override {
         // Amount of "shares" in chai. probably more gas efficient to import
         chaiContract.join(address(this), amount);
-        _shares = div(amount, pot.chi());
+        uint256 _shares = amount / pot.chi();
         totalSupply += _shares;
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
@@ -53,6 +52,6 @@ contract Chai4626 is ERC4626 {
     }
 
     function totalAssets() public view override returns (uint256) {
-        return mul(totalAssets, pot.chi());
+        return totalSupply * pot.chi();
     }
 }
