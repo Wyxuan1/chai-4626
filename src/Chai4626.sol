@@ -17,11 +17,12 @@ contract Chai4626 is ERC4626 {
     uint256 public ibalance;
 
     // Chai(0x06AF07097C9Eeb7fD685c692751D5C66dB49c215);
-    constructor(address _dai, address _chai)
-        ERC4626(ERC20(_dai), "wCHAI", "Wrapped 4626 Chai")
-    {
+    constructor(
+        address _dai,
+        address _chai
+    ) ERC4626(ERC20(_dai), "wCHAI", "Wrapped 4626 Chai") {
         daiToken = ERC20(_dai);
-        daiToken.approve(_chai, 2**256 - 1);
+        daiToken.approve(_chai, 2 ** 256 - 1);
         chaiContract = Chai(_chai);
     }
 
@@ -30,25 +31,14 @@ contract Chai4626 is ERC4626 {
         chaiContract.join(address(this), amount);
         uint256 _shares = amount / pot.chi();
         totalSupply += _shares;
-        // Cannot overflow because the sum of all user
-        // balances can't exceed the max uint256 value.
-        unchecked {
-            balanceOf[receiver] += _shares;
-        }
-
-        emit Transfer(address(0), receiver, _shares);
+        // mint the shares from erc20
+        _mint(receiver, _shares);
     }
 
     function _burn(address owner, uint256 shares) internal override {
         chaiContract.exit(address(this), shares);
         daiToken.transfer(owner, shares);
-        balanceOf[owner] -= shares;
-        // Cannot underflow because a user's balance
-        // will never be larger than the total supply.
-        unchecked {
-            totalSupply -= shares;
-        }
-        emit Transfer(owner, address(0), shares);
+        _burn(owner, shares);
     }
 
     function totalAssets() public view override returns (uint256) {

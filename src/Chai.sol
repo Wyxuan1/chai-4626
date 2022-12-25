@@ -39,11 +39,7 @@ interface JoinLike {
 }
 
 interface GemLike {
-    function transferFrom(
-        address,
-        address,
-        uint256
-    ) external returns (bool);
+    function transferFrom(address, address, uint256) external returns (bool);
 
     function approve(address, uint256) external returns (bool);
 }
@@ -72,7 +68,7 @@ contract Chai {
     event Transfer(address indexed src, address indexed dst, uint256 wad);
 
     // --- Math ---
-    uint256 constant RAY = 10**27;
+    uint256 constant RAY = 10 ** 27;
 
     function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require((z = x + y) >= x);
