@@ -1,3 +1,3 @@
 # chai-4626
 
-Uses Foundry. Run NPX start to download dependencies
+Uses Foundry. Run `npm run` to download dependencies
