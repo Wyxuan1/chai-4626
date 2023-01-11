@@ -7,3 +7,6 @@
 [submodule "flattened4626/lib/forge-std"]
 	path = flattened4626/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "lib/erc4626-tests"]
+	path = lib/erc4626-tests
+	url = https://github.com/a16z/erc4626-tests
