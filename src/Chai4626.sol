@@ -15,14 +15,14 @@ interface PotLike {
 contract Chai4626 is ERC4626 {
     Chai public constant CHAICONTRACT =
         Chai(0x06AF07097C9Eeb7fD685c692751D5C66dB49c215);
-    ERC20 public constant DAITOKEN =
-        ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
-    PotLike public immutable POT =
+    ERC20 public immutable DAITOKEN;
+    PotLike public constant POT =
         PotLike(0x197E90f9FAD81970bA7976f33CbD77088E5D7cf7);
 
     uint256 public assetBalance = 0;
 
-    constructor() ERC4626(DAITOKEN, "wCHAI", "Wrapped 4626 Chai") {
+    constructor(ERC20 _dai) ERC4626(_dai, "wCHAI", "Wrapped 4626 Chai") {
+        DAITOKEN = _dai;
         DAITOKEN.approve(address(CHAICONTRACT), 2 ** 256 - 1);
     }
 
